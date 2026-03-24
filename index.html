@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>首爾小帳本 🇰🇷 v16</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -164,12 +163,15 @@
         let privateOwner = '冠妤';
         const avgRate = 0.0214;
 
+// 使用在地 ISO 格式 YYYY-MM-DD
+        const getLocalDateStr = (dateObj = new Date()) => dateObj.toLocaleDateString('en-CA');
+
         window.onload = function() {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            document.getElementById('backDate').value = yesterday.toISOString().split('T')[0];
+            document.getElementById('backDate').value = getLocalDateStr(yesterday);
             ['', 'A', 'B'].forEach(s => updatePayMethods(s));
-            window.render = render; // 將 render 函式綁定給 Firebase 呼叫
+            window.render = render;
             render();
         };
 
@@ -221,8 +223,7 @@
                 method = `${document.getElementById('payCategory').value}(${document.getElementById('payMethod').value})`;
             }
             if (amount <= 0) return alert('請輸入金額');
-            
-            // 將新增資料丟給 Firebase
+// 將新增資料丟給 Firebase
             window.fbAddRecord({
                 id: Date.now(), payer: finalPayer, isPrivate: currentPayer === '個人',
                 amount, amountA, amountB, note, method,
@@ -251,7 +252,7 @@
             historyDiv.innerHTML = '';
             let totalA = 0, totalB = 0;
 
-            // 改用全域的 window.records
+// 改用全域的 window.records
             window.records.forEach(r => {
                 if (!r.isPrivate) { totalA += r.amountA; totalB += r.amountB; }
                 if (viewFilter !== '全部' && (r.payer !== '共同' && r.payer !== viewFilter)) return;
@@ -291,17 +292,13 @@
 
         function exportToExcel() {
             let csv = "\ufeff日期,類型,付款人,品項,總額(KRW),冠妤出,哲永出,支付方式,退稅,備註\n";
-            window.records.forEach(r => { csv += `${r.date},${r.isPrivate?'個人私物':'共同分帳'},${r.payer},${r.note},${r.amount},${r.amountA},${r.amountB},${r.method},${r.isTaxRefund?'是':'否'},"${r.remark}"\n`; });
+window.records.forEach(r => { csv += `${r.date},${r.isPrivate?'個人私物':'共同分帳'},${r.payer},${r.note},${r.amount},${r.amountA},${r.amountB},${r.method},${r.isTaxRefund?'是':'否'},"${r.remark}"\n`; });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
             a.download = `首爾記帳_v16.csv`; a.click();
         }
 
-        function clearAll() { 
-            if(confirm('確定重置雲端所有資料嗎？')) { 
-                window.records.forEach(r => window.fbDeleteRecord(r.fbId)); 
-            } 
-        }
+        function clearAll() { if(confirm('確定重置嗎？')) { window.records.forEach(r => window.fbDeleteRecord(r.fbId)); } }
     </script>
 </body>
 </html>
